@@ -1,1 +1,2 @@
 https://geoportal.saarland.de/mapbender/php/wms.php?INSPIRE=1&REQUEST=GetCapabilities&SERVICE=WMS&VERSION=1.3.0&inspire=1&layer_id=40226&withChilds=1
+https://tile.openstreetmap.org/%7Bz%7D/%7Bx%7D/%7By%7D.png&zmax=19&zmin=0
