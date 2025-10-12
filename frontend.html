@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Germany Flood Risk Monitor</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+        
+        /* Layout */
+        .dashboard {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e1e8ed;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e8ed;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* Search */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f8f9fa;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .search-result-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+        
+        .reset-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        /* Risk Overview */
+        .risk-overview {
+            padding: 16px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .risk-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .risk-card {
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid;
+        }
+        
+        .risk-card.high {
+            border-left-color: #e74c3c;
+            background: #fdedec;
+        }
+        
+        .risk-card.medium {
+            border-left-color: #f39c12;
+            background: #fef5e7;
+        }
+        
+        .risk-card.low {
+            border-left-color: #f1c40f;
+            background: #fef9e7;
+        }
+        
+        .risk-card.very-low {
+            border-left-color: #27ae60;
+            background: #eafaf1;
+        }
+        
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .risk-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .risk-count {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .risk-dots {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+        }
+        
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        /* Filters */
+        .filters {
+            padding: 16px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .filter-group {
+            margin-bottom: 16px;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .filter-option input {
+            margin: 0;
+        }
+        
+        /* Station List */
+        .station-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .station-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid;
+        }
+        
+        .station-item:hover {
+            background: #e8f4fd;
+            transform: translateX(2px);
+        }
+        
+        .station-item.high { border-left-color: #e74c3c; }
+        .station-item.medium { border-left-color: #f39c12; }
+        .station-item.low { border-left-color: #f1c40f; }
+        .station-item.very-low { border-left-color: #27ae60; }
+        
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .station-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .station-risk {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .station-risk.high { background: #e74c3c; }
+        .station-risk.medium { background: #f39c12; }
+        .station-risk.low { background: #f1c40f; }
+        .station-risk.very-low { background: #27ae60; }
+        
+        .station-details {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        /* Map */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <h1>🌊 Germany Flood Risk Monitor</h1>
+                <p>Real-time flood risk assessment</p>
+            </div>
+            
+            <!-- Search -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="citySearch" placeholder="Search for a German city...">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <button id="resetSearch" class="reset-btn">Show All Stations</button>
+            </div>
+            
+            <!-- Risk Overview -->
+            <div class="risk-overview">
+                <div class="section-title">🚨 Risk Overview</div>
+                <div class="risk-cards">
+                    <div class="risk-card high">
+                        <div class="risk-header">
+                            <div class="risk-title">High Risk</div>
+                            <div class="risk-count" id="highRiskCount">0 stations</div>
+                        </div>
+                        <div class="risk-dots" id="highRiskDots"></div>
+                    </div>
+                    <div class="risk-card medium">
+                        <div class="risk-header">
+                            <div class="risk-title">Medium Risk</div>
+                            <div class="risk-count" id="mediumRiskCount">0 stations</div>
+                        </div>
+                        <div class="risk-dots" id="mediumRiskDots"></div>
+                    </div>
+                    <div class="risk-card low">
+                        <div class="risk-header">
+                            <div class="risk-title">Low Risk</div>
+                            <div class="risk-count" id="lowRiskCount">0 stations</div>
+                        </div>
+                        <div class="risk-dots" id="lowRiskDots"></div>
+                    </div>
+                    <div class="risk-card very-low">
+                        <div class="risk-header">
+                            <div class="risk-title">Very Low Risk</div>
+                            <div class="risk-count" id="veryLowRiskCount">0 stations</div>
+                        </div>
+                        <div class="risk-dots" id="veryLowRiskDots"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <div class="section-title">🔧 Filters</div>
+                    <div class="filter-options">
+                        <label class="filter-option">
+                            <input type="checkbox" checked data-risk="high"> High Risk
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" checked data-risk="medium"> Medium Risk
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" checked data-risk="low"> Low Risk
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" checked data-risk="very-low"> Very Low Risk
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Station List -->
+            <div class="station-list">
+                <div class="section-title">📋 Stations (<span id="totalStations">0</span>)</div>
+                <div id="stationList">
+                    <!-- Stations will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map -->
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // German cities database
+        const germanCities = [
+            { name: "Berlin", lat: 52.5200, lon: 13.4050, type: "capital" },
+            { name: "Hamburg", lat: 53.5511, lon: 9.9937, type: "city" },
+            { name: "Munich", lat: 48.1351, lon: 11.5820, type: "city" },
+            { name: "Cologne", lat: 50.9375, lon: 6.9603, type: "city" },
+            { name: "Frankfurt", lat: 50.1109, lon: 8.6821, type: "city" },
+            { name: "Stuttgart", lat: 48.7758, lon: 9.1829, type: "city" },
+            { name: "Düsseldorf", lat: 51.2277, lon: 6.7735, type: "city" },
+            { name: "Dortmund", lat: 51.5136, lon: 7.4653, type: "city" },
+            { name: "Essen", lat: 51.4556, lon: 7.0116, type: "city" },
+            { name: "Leipzig", lat: 51.3397, lon: 12.3731, type: "city" },
+            { name: "Bremen", lat: 53.0793, lon: 8.8017, type: "city" },
+            { name: "Dresden", lat: 51.0504, lon: 13.7373, type: "city" },
+            { name: "Hannover", lat: 52.3759, lon: 9.7320, type: "city" },
+            { name: "Nuremberg", lat: 49.4521, lon: 11.0767, type: "city" },
+            { name: "Duisburg", lat: 51.4344, lon: 6.7623, type: "city" }
+        ];
+
+        // Initialize the map
+        var map = L.map('map').setView([51.1657, 10.4515], 6);
+        var stationsLayer;
+        var allStations = [];
+        var stationMarkers = {};
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // DOM Elements
+        const searchInput = document.getElementById('citySearch');
+        const searchResults = document.getElementById('searchResults');
+        const resetButton = document.getElementById('resetSearch');
+
+        // Search functionality
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            searchResults.innerHTML = '';
+            
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                resetButton.style.display = query ? 'block' : 'none';
+                return;
+            }
+            
+            const matches = germanCities.filter(city => 
+                city.name.toLowerCase().includes(query)
+            );
+            
+            if (matches.length > 0) {
+                matches.forEach(city => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.textContent = city.name;
+                    div.onclick = () => zoomToCity(city);
+                    searchResults.appendChild(div);
+                });
+                searchResults.style.display = 'block';
+                resetButton.style.display = 'block';
+            } else {
+                searchResults.style.display = 'none';
+                resetButton.style.display = 'block';
+            }
+        });
+
+        // Enter key support for search
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.toLowerCase();
+                const match = germanCities.find(city => 
+                    city.name.toLowerCase() === query
+                );
+                if (match) {
+                    zoomToCity(match);
+                } else if (query.length > 0) {
+                    alert('City not found. Please select from the dropdown.');
+                }
+            }
+        });
+
+        // Reset functionality
+        resetButton.addEventListener('click', function() {
+            searchInput.value = '';
+            resetToAllStations();
+            resetButton.style.display = 'none';
+            searchResults.style.display = 'none';
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        function zoomToCity(city) {
+            console.log('Zooming to:', city.name);
+            
+            // Zoom to the city
+            map.setView([city.lat, city.lon], 10);
+            
+            // Clear previous city marker and radius
+            if (window.cityMarker) {
+                map.removeLayer(window.cityMarker);
+            }
+            if (window.cityRadius) {
+                map.removeLayer(window.cityRadius);
+            }
+            
+            // Add blue radius circle (20km)
+            window.cityRadius = L.circle([city.lat, city.lon], {
+                color: '#3498db',
+                fillColor: '#3498db',
+                fillOpacity: 0.1,
+                radius: 20000 // 20km in meters
+            }).addTo(map);
+            
+            // Add marker for the searched city
+            window.cityMarker = L.marker([city.lat, city.lon])
+                .addTo(map);
+            
+            // Find stations within 20km radius and create summary
+            const nearbyStations = findStationsInRadius(city.lat, city.lon, 20000);
+            const summaryContent = createAreaSummary(city.name, nearbyStations);
+            
+            window.cityMarker.bindPopup(summaryContent).openPopup();
+            
+            // Hide search results
+            searchResults.style.display = 'none';
+            searchInput.value = city.name;
+            
+            // Update sidebar with area stations
+            updateSidebarWithAreaStations(nearbyStations, city.name);
+        }
+
+        function findStationsInRadius(lat, lon, radiusMeters) {
+            if (allStations.length === 0) return [];
+            
+            return allStations.filter(station => {
+                const coords = station.geometry.coordinates;
+                const distance = map.distance([lat, lon], [coords[1], coords[0]]);
+                return distance <= radiusMeters;
+            });
+        }
+
+        function createAreaSummary(cityName, stations) {
+            let summaryContent = `
+                <div style="min-width: 250px;">
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50;">🌊 ${cityName} Area</h3>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                        <strong>Flood Risk Summary</strong><br>
+                        Stations in 20km radius: <strong>${stations.length}</strong>
+            `;
+            
+            if (stations.length > 0) {
+                const riskCounts = {};
+                stations.forEach(station => {
+                    const risk = station.properties.flood_risk_category || 'Unknown';
+                    riskCounts[risk] = (riskCounts[risk] || 0) + 1;
+                });
+                
+                summaryContent += `<div style="margin-top: 8px;">`;
+                Object.entries(riskCounts).forEach(([risk, count]) => {
+                    const color = getRiskColor(risk);
+                    summaryContent += `
+                        <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: ${color}; margin-right: 8px;"></div>
+                            ${risk}: ${count} stations
+                        </div>
+                    `;
+                });
+                summaryContent += `</div>`;
+            } else {
+                summaryContent += `<div style="margin-top: 8px; color: #7f8c8d;">
+                    No flood monitoring stations in this area.
+                </div>`;
+            }
+            
+            summaryContent += `
+                    </div>
+                    <div style="font-size: 11px; color: #7f8c8d;">
+                        💡 Blue circle shows 20km search radius
+                    </div>
+                </div>
+            `;
+            
+            return summaryContent;
+        }
+
+        function updateSidebarWithAreaStations(stations, cityName) {
+            const stationList = document.getElementById('stationList');
+            
+            // Update header to show we're filtering by area
+            document.querySelector('.station-list .section-title').innerHTML = 
+                `📋 ${cityName} Area (${stations.length} stations)`;
+            
+            // Clear current list
+            stationList.innerHTML = '';
+            
+            if (stations.length === 0) {
+                stationList.innerHTML = `
+                    <div style="text-align: center; color: #7f8c8d; padding: 20px;">
+                        No stations found in ${cityName} area
+                    </div>
+                `;
+                return;
+            }
+            
+            // Populate with area stations
+            populateStationList(stations);
+        }
+
+        function resetToAllStations() {
+            const stationList = document.getElementById('stationList');
+            
+            document.querySelector('.station-list .section-title').innerHTML = 
+                `📋 Stations (${allStations.length})`;
+            
+            // Clear any city visualization
+            if (window.cityRadius) {
+                map.removeLayer(window.cityRadius);
+                window.cityRadius = null;
+            }
+            if (window.cityMarker) {
+                map.removeLayer(window.cityMarker);
+                window.cityMarker = null;
+            }
+            
+            // Repopulate with all stations
+            populateStationList(allStations);
+        }
+
+        // Load and process GeoJSON data
+        fetch('germany_waterlevels_with_forecast.geojson')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(geojsonData => {
+                console.log('Loaded GeoJSON data:', geojsonData);
+                allStations = geojsonData.features;
+                
+                // Create stations layer
+                stationsLayer = L.geoJSON(geojsonData, {
+                    pointToLayer: function(feature, latlng) {
+                        const riskCategory = feature.properties.flood_risk_category || 'Unknown';
+                        const risk = riskCategory.toLowerCase().replace(' ', '-');
+                        
+                        const marker = L.circleMarker(latlng, {
+                            radius: getRiskRadius(riskCategory),
+                            fillColor: getRiskColor(riskCategory),
+                            color: '#2c3e50',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                        
+                        // Store marker reference
+                        if (feature.properties.station_id) {
+                            stationMarkers[feature.properties.station_id] = marker;
+                        }
+                        
+                        return marker;
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const props = feature.properties;
+                        const popupContent = createPopupContent(props);
+                        layer.bindPopup(popupContent);
+                        
+                        layer.on('click', function() {
+                            if (props.station_id) {
+                                highlightStationInSidebar(props.station_id);
+                            }
+                        });
+                    }
+                }).addTo(map);
+
+                // Update sidebar with real data
+                updateSidebarWithData(geojsonData.features);
+                
+                // Fit map to show all stations
+                map.fitBounds(stationsLayer.getBounds());
+
+                console.log('✅ Map loaded successfully with', geojsonData.features.length, 'stations');
+
+            })
+            .catch(error => {
+                console.error('❌ Error loading GeoJSON:', error);
+                alert('Error loading flood data. Using sample data for demonstration.');
+                loadSampleData();
+            });
+
+        function getRiskColor(riskCategory) {
+            switch(riskCategory) {
+                case 'High': return '#e74c3c';
+                case 'Medium': return '#f39c12';
+                case 'Low': return '#f1c40f';
+                case 'Very Low': return '#27ae60';
+                default: return '#95a5a6';
+            }
+        }
+
+        function getRiskRadius(riskCategory) {
+            switch(riskCategory) {
+                case 'High': return 10;
+                case 'Medium': return 8;
+                case 'Low': return 6;
+                case 'Very Low': return 4;
+                default: return 4;
+            }
+        }
+
+        function createPopupContent(props) {
+            return `
+                <div style="min-width: 250px; padding: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db;">
+                        <div style="font-size: 16px; font-weight: 600; color: #2c3e50;">${props.station || 'Unknown Station'}</div>
+                        <div style="padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px; font-weight: 500; background: ${getRiskColor(props.flood_risk_category)}">
+                            ${props.flood_risk_category || 'Unknown'}
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                        <div>
+                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River</div>
+                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_name || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River KM</div>
+                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_km || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Discharge</div>
+                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.avg_discharge ? props.avg_discharge.toFixed(1) + ' m³/s' : 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Agency</div>
+                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.agency || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSidebarWithData(stations) {
+            // Update risk counts
+            const riskCounts = {
+                'high': 0,
+                'medium': 0,
+                'low': 0,
+                'very-low': 0
+            };
+
+            stations.forEach(station => {
+                const risk = station.properties.flood_risk_category ? 
+                    station.properties.flood_risk_category.toLowerCase().replace(' ', '-') : 'unknown';
+                if (riskCounts.hasOwnProperty(risk)) {
+                    riskCounts[risk]++;
+                }
+            });
+
+            // Update risk overview
+            document.getElementById('highRiskCount').textContent = `${riskCounts.high} stations`;
+            document.getElementById('mediumRiskCount').textContent = `${riskCounts.medium} stations`;
+            document.getElementById('lowRiskCount').textContent = `${riskCounts.low} stations`;
+            document.getElementById('veryLowRiskCount').textContent = `${riskCounts['very-low']} stations`;
+
+            // Update risk dots
+            updateRiskDots('highRiskDots', riskCounts.high, '#e74c3c');
+            updateRiskDots('mediumRiskDots', riskCounts.medium, '#f39c12');
+            updateRiskDots('lowRiskDots', riskCounts.low, '#f1c40f');
+            updateRiskDots('veryLowRiskDots', riskCounts['very-low'], '#27ae60');
+
+            // Update total stations
+            document.getElementById('totalStations').textContent = stations.length;
+
+            // Populate station list
+            populateStationList(stations);
+        }
+
+        function updateRiskDots(containerId, count, color) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const dotsCount = Math.min(count, 10);
+            for (let i = 0; i < dotsCount; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'risk-dot';
+                dot.style.background = color;
+                container.appendChild(dot);
+            }
+        }
+
+        function populateStationList(stations) {
+            const stationList = document.getElementById('stationList');
+            stationList.innerHTML = '';
+
+            stations.forEach(station => {
+                const props = station.properties;
+                const risk = props.flood_risk_category ? 
+                    props.flood_risk_category.toLowerCase().replace(' ', '-') : 'unknown';
+                const stationId = props.station_id || Math.random().toString(36).substr(2, 9);
+                
+                const item = document.createElement('div');
+                item.className = `station-item ${risk}`;
+                item.dataset.stationId = stationId;
+                
+                item.innerHTML = `
+                    <div class="station-header">
+                        <div class="station-name">${props.station || 'Unknown Station'}</div>
+                        <div class="station-risk ${risk}">${props.flood_risk_category || 'Unknown'}</div>
+                    </div>
+                    <div class="station-details">
+                        ${props.river_name || 'N/A'} • ${props.avg_discharge ? props.avg_discharge.toFixed(1) + ' m³/s' : 'N/A'}
+                    </div>
+                `;
+                
+                // Add click event to zoom to station
+                item.addEventListener('click', function() {
+                    const coords = station.geometry.coordinates;
+                    map.setView([coords[1], coords[0]], 13);
+                    const marker = stationMarkers[stationId];
+                    if (marker) {
+                        marker.openPopup();
+                    }
+                    highlightStationInSidebar(stationId);
+                });
+                
+                stationList.appendChild(item);
+            });
+        }
+
+        function highlightStationInSidebar(stationId) {
+            // Remove highlight from all stations
+            document.querySelectorAll('.station-item').forEach(item => {
+                item.style.background = '';
+            });
+            
+            // Highlight the selected station
+            const selectedItem = document.querySelector(`[data-station-id="${stationId}"]`);
+            if (selectedItem) {
+                selectedItem.style.background = '#e8f4fd';
+                selectedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Sample data fallback
+        function loadSampleData() {
+            const sampleStations = [
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [13.4050, 52.5200] // Berlin
+                    },
+                    properties: {
+                        station: "BERLIN SAMPLE",
+                        river_km: 1.0,
+                        agency: "SAMPLE",
+                        station_id: "sample1",
+                        river_name: "SPREE",
+                        avg_discharge: 150.5,
+                        flood_risk_category: "Medium",
+                        flood_risk_score: 2
+                    }
+                },
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [11.5820, 48.1351] // Munich
+                    },
+                    properties: {
+                        station: "MUNICH SAMPLE",
+                        river_km: 2.5,
+                        agency: "SAMPLE", 
+                        station_id: "sample2",
+                        river_name: "ISAR",
+                        avg_discharge: 280.3,
+                        flood_risk_category: "High",
+                        flood_risk_score: 4
+                    }
+                }
+            ];
+            
+            allStations = sampleStations;
+            updateSidebarWithData(sampleStations);
+        }
+
+    </script>
+</body>
+</html>
