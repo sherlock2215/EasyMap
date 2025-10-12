@@ -389,10 +389,60 @@
             </div>
         </div>
         
-        <!-- Map -->
-        <div class="map-container">
-            <div id="map"></div>
-        </div>
+        <!-- Alarm Banner -->
+<div id="alarmBanner" style="
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 320px;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: 15px;
+    font-size: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    ⚠️ HIGH FLOOD RISK DETECTED - Monitor stations closely!
+</div>
+
+<!-- Map -->
+<div class="map-container">
+    <div id="map"></div>
+    <!-- Legend -->
+<div id="legend" style="
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+    font-size: 12px;
+    min-width: 150px;
+">
+    <div style="font-weight: 600; margin-bottom: 8px; color: #2c3e50;">🌊 Flood Risk Legend</div>
+    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; background: #e74c3c; margin-right: 8px;"></div>
+        <span>High Risk</span>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; background: #f39c12; margin-right: 8px;"></div>
+        <span>Medium Risk</span>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; background: #f1c40f; margin-right: 8px;"></div>
+        <span>Low Risk</span>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; background: #27ae60; margin-right: 8px;"></div>
+        <span>Very Low Risk</span>
+    </div>
+</div>
+</div>
     </div>
 
     <!-- Leaflet JavaScript -->
@@ -400,23 +450,87 @@
     
     <script>
         // German cities database
-        const germanCities = [
-            { name: "Berlin", lat: 52.5200, lon: 13.4050, type: "capital" },
-            { name: "Hamburg", lat: 53.5511, lon: 9.9937, type: "city" },
-            { name: "Munich", lat: 48.1351, lon: 11.5820, type: "city" },
-            { name: "Cologne", lat: 50.9375, lon: 6.9603, type: "city" },
-            { name: "Frankfurt", lat: 50.1109, lon: 8.6821, type: "city" },
-            { name: "Stuttgart", lat: 48.7758, lon: 9.1829, type: "city" },
-            { name: "Düsseldorf", lat: 51.2277, lon: 6.7735, type: "city" },
-            { name: "Dortmund", lat: 51.5136, lon: 7.4653, type: "city" },
-            { name: "Essen", lat: 51.4556, lon: 7.0116, type: "city" },
-            { name: "Leipzig", lat: 51.3397, lon: 12.3731, type: "city" },
-            { name: "Bremen", lat: 53.0793, lon: 8.8017, type: "city" },
-            { name: "Dresden", lat: 51.0504, lon: 13.7373, type: "city" },
-            { name: "Hannover", lat: 52.3759, lon: 9.7320, type: "city" },
-            { name: "Nuremberg", lat: 49.4521, lon: 11.0767, type: "city" },
-            { name: "Duisburg", lat: 51.4344, lon: 6.7623, type: "city" }
-        ];
+// German cities database
+const germanCities = [
+    { name: "Berlin", lat: 52.5200, lon: 13.4050, type: "capital" },
+    { name: "Hamburg", lat: 53.5511, lon: 9.9937, type: "city" },
+    { name: "Munich", lat: 48.1351, lon: 11.5820, type: "city" },
+    { name: "Cologne", lat: 50.9375, lon: 6.9603, type: "city" },
+    { name: "Frankfurt", lat: 50.1109, lon: 8.6821, type: "city" },
+    { name: "Stuttgart", lat: 48.7758, lon: 9.1829, type: "city" },
+    { name: "Düsseldorf", lat: 51.2277, lon: 6.7735, type: "city" },
+    { name: "Dortmund", lat: 51.5136, lon: 7.4653, type: "city" },
+    { name: "Essen", lat: 51.4556, lon: 7.0116, type: "city" },
+    { name: "Leipzig", lat: 51.3397, lon: 12.3731, type: "city" },
+    { name: "Bremen", lat: 53.0793, lon: 8.8017, type: "city" },
+    { name: "Dresden", lat: 51.0504, lon: 13.7373, type: "city" },
+    { name: "Hannover", lat: 52.3759, lon: 9.7320, type: "city" },
+    { name: "Nuremberg", lat: 49.4521, lon: 11.0767, type: "city" },
+    { name: "Duisburg", lat: 51.4344, lon: 6.7623, type: "city" },
+    { name: "Saarbrücken", lat: 49.2402, lon: 6.9969, type: "city" },
+    { name: "Bochum", lat: 51.4818, lon: 7.2162, type: "city" },
+    { name: "Wuppertal", lat: 51.2562, lon: 7.1508, type: "city" },
+    { name: "Bielefeld", lat: 52.0200, lon: 8.5330, type: "city" },
+    { name: "Bonn", lat: 50.7374, lon: 7.0982, type: "city" },
+    { name: "Münster", lat: 51.9607, lon: 7.6261, type: "city" },
+    { name: "Karlsruhe", lat: 49.0069, lon: 8.4037, type: "city" },
+    { name: "Mannheim", lat: 49.4875, lon: 8.4660, type: "city" },
+    { name: "Augsburg", lat: 48.3705, lon: 10.8978, type: "city" },
+    { name: "Wiesbaden", lat: 50.0820, lon: 8.2410, type: "city" },
+    { name: "Gelsenkirchen", lat: 51.5177, lon: 7.0857, type: "city" },
+    { name: "Mönchengladbach", lat: 51.1805, lon: 6.4428, type: "city" },
+    { name: "Braunschweig", lat: 52.2689, lon: 10.5268, type: "city" },
+    { name: "Kiel", lat: 54.3233, lon: 10.1228, type: "city" },
+    { name: "Chemnitz", lat: 50.8328, lon: 12.9209, type: "city" },
+    { name: "Aachen", lat: 50.7753, lon: 6.0839, type: "city" },
+    { name: "Halle", lat: 51.4820, lon: 11.9690, type: "city" },
+    { name: "Magdeburg", lat: 52.1205, lon: 11.6276, type: "city" },
+    { name: "Freiburg", lat: 47.9990, lon: 7.8421, type: "city" },
+    { name: "Krefeld", lat: 51.3388, lon: 6.5853, type: "city" },
+    { name: "Lübeck", lat: 53.8655, lon: 10.6866, type: "city" },
+    { name: "Oberhausen", lat: 51.4967, lon: 6.8519, type: "city" },
+    { name: "Erfurt", lat: 50.9848, lon: 11.0299, type: "city" },
+    { name: "Mainz", lat: 50.0012, lon: 8.2763, type: "city" },
+    { name: "Rostock", lat: 54.0924, lon: 12.0991, type: "city" },
+    { name: "Kassel", lat: 51.3127, lon: 9.4797, type: "city" },
+    { name: "Hagen", lat: 51.3671, lon: 7.4633, type: "city" },
+    { name: "Hamm", lat: 51.6739, lon: 7.8160, type: "city" },
+    { name: "Saarland", lat: 49.3964, lon: 6.9969, type: "region" },
+    { name: "Potsdam", lat: 52.3906, lon: 13.0645, type: "city" },
+    { name: "Ludwigshafen", lat: 49.4812, lon: 8.4463, type: "city" },
+    { name: "Oldenburg", lat: 53.1435, lon: 8.2146, type: "city" },
+    { name: "Leverkusen", lat: 51.0303, lon: 6.9843, type: "city" },
+    { name: "Osnabrück", lat: 52.2799, lon: 8.0472, type: "city" },
+    { name: "Solingen", lat: 51.1702, lon: 7.0835, type: "city" },
+    { name: "Heidelberg", lat: 49.3988, lon: 8.6724, type: "city" },
+    { name: "Herne", lat: 51.5369, lon: 7.2009, type: "city" },
+    { name: "Neuss", lat: 51.2042, lon: 6.6876, type: "city" },
+    { name: "Darmstadt", lat: 49.8728, lon: 8.6512, type: "city" },
+    { name: "Paderborn", lat: 51.7189, lon: 8.7575, type: "city" },
+    { name: "Regensburg", lat: 49.0134, lon: 12.1016, type: "city" },
+    { name: "Ingolstadt", lat: 48.7638, lon: 11.4257, type: "city" },
+    { name: "Würzburg", lat: 49.7913, lon: 9.9534, type: "city" },
+    { name: "Fürth", lat: 49.4771, lon: 10.9887, type: "city" },
+    { name: "Wolfsburg", lat: 52.4226, lon: 10.7865, type: "city" },
+    { name: "Ulm", lat: 48.4011, lon: 9.9876, type: "city" },
+    { name: "Heilbronn", lat: 49.1427, lon: 9.2109, type: "city" },
+    { name: "Pforzheim", lat: 48.8922, lon: 8.6946, type: "city" },
+    { name: "Göttingen", lat: 51.5413, lon: 9.9158, type: "city" },
+    { name: "Bottrop", lat: 51.5270, lon: 6.9246, type: "city" },
+    { name: "Trier", lat: 49.7499, lon: 6.6373, type: "city" },
+    { name: "Recklinghausen", lat: 51.6141, lon: 7.1979, type: "city" },
+    { name: "Reutlingen", lat: 48.4914, lon: 9.2115, type: "city" },
+    { name: "Bremerhaven", lat: 53.5396, lon: 8.5809, type: "city" },
+    { name: "Koblenz", lat: 50.3569, lon: 7.5890, type: "city" },
+    { name: "Bergisch Gladbach", lat: 50.9916, lon: 7.1367, type: "city" },
+    { name: "Jena", lat: 50.9271, lon: 11.5892, type: "city" },
+    { name: "Remscheid", lat: 51.1787, lon: 7.1897, type: "city" },
+    { name: "Erlangen", lat: 49.5960, lon: 11.0043, type: "city" },
+    { name: "Moers", lat: 51.4516, lon: 6.6408, type: "city" },
+    { name: "Siegen", lat: 50.8837, lon: 8.0170, type: "city" },
+    { name: "Hildesheim", lat: 52.1548, lon: 9.9578, type: "city" },
+    { name: "Salzgitter", lat: 52.1500, lon: 10.3333, type: "city" }
+];
 
         // Initialize the map
         var map = L.map('map').setView([51.1657, 10.4515], 6);
@@ -640,31 +754,56 @@
                 return response.json();
             })
             .then(geojsonData => {
-                console.log('Loaded GeoJSON data:', geojsonData);
-                allStations = geojsonData.features;
-                
-                // Create stations layer
-                stationsLayer = L.geoJSON(geojsonData, {
+    console.log('Loaded GeoJSON data:', geojsonData);
+    allStations = geojsonData.features;
+    
+    // 🔴 CHECK FOR HIGH RISK STATIONS AND SHOW ALARM
+    const highRiskStations = allStations.filter(station => {
+        const risk = station.properties.flood_risk_category;
+        return risk === 'High' || risk === 'Extreme';
+    });
+    
+    if (highRiskStations.length > 0) {
+        const alarmBanner = document.getElementById('alarmBanner');
+        alarmBanner.style.display = 'block';
+        alarmBanner.innerHTML = `⚠️ HIGH FLOOD RISK DETECTED - ${highRiskStations.length} station(s) require immediate attention!`;
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            alarmBanner.style.display = 'none';
+        }, 10000);
+        
+        // Add click to close functionality
+        alarmBanner.addEventListener('click', function() {
+            this.style.display = 'none';
+        });
+    }
+    
+    // Create stations layer (your existing code continues...)
+    stationsLayer = L.geoJSON(geojsonData, {
                     pointToLayer: function(feature, latlng) {
-                        const riskCategory = feature.properties.flood_risk_category || 'Unknown';
-                        const risk = riskCategory.toLowerCase().replace(' ', '-');
-                        
-                        const marker = L.circleMarker(latlng, {
-                            radius: getRiskRadius(riskCategory),
-                            fillColor: getRiskColor(riskCategory),
-                            color: '#2c3e50',
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.8
-                        });
-                        
-                        // Store marker reference
-                        if (feature.properties.station_id) {
-                            stationMarkers[feature.properties.station_id] = marker;
-                        }
-                        
-                        return marker;
-                    },
+    const riskCategory = feature.properties.flood_risk_category || 'Unknown';
+    const risk = riskCategory.toLowerCase().replace(' ', '-');
+    
+    // Make high risk stations more prominent
+    const isHighRisk = riskCategory === 'High' || riskCategory === 'Extreme';
+    
+    const marker = L.circleMarker(latlng, {
+        radius: isHighRisk ? 12 : getRiskRadius(riskCategory), // Larger for high risk
+        fillColor: getRiskColor(riskCategory),
+        color: isHighRisk ? '#c0392b' : '#2c3e50', // Red border for high risk
+        weight: isHighRisk ? 3 : 1, // Thicker border for high risk
+        opacity: 1,
+        fillOpacity: 0.8
+    });
+    
+    // Store marker reference
+    if (feature.properties.station_id) {
+        stationMarkers[feature.properties.station_id] = marker;
+    }
+    
+    return marker;
+},
                     onEachFeature: function(feature, layer) {
                         const props = feature.properties;
                         const popupContent = createPopupContent(props);
@@ -713,36 +852,45 @@
             }
         }
 
-        function createPopupContent(props) {
-            return `
-                <div style="min-width: 250px; padding: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db;">
-                        <div style="font-size: 16px; font-weight: 600; color: #2c3e50;">${props.station || 'Unknown Station'}</div>
-                        <div style="padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px; font-weight: 500; background: ${getRiskColor(props.flood_risk_category)}">
-                            ${props.flood_risk_category || 'Unknown'}
-                        </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                        <div>
-                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River</div>
-                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_name || 'N/A'}</div>
-                        </div>
-                        <div>
-                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River KM</div>
-                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_km || 'N/A'}</div>
-                        </div>
-                        <div>
-                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Discharge</div>
-                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.avg_discharge ? props.avg_discharge.toFixed(1) + ' m³/s' : 'N/A'}</div>
-                        </div>
-                        <div>
-                            <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Agency</div>
-                            <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.agency || 'N/A'}</div>
-                        </div>
-                    </div>
+function createPopupContent(props) {
+    const isHighRisk = props.flood_risk_category === 'High' || props.flood_risk_category === 'Extreme';
+    const riskColor = getRiskColor(props.flood_risk_category);
+    
+    return `
+        <div style="min-width: 250px; padding: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid ${riskColor};">
+                <div style="font-size: 16px; font-weight: 600; color: #2c3e50;">${props.station || 'Unknown Station'}</div>
+                <div style="padding: 4px 8px; border-radius: 12px; color: white; font-size: 11px; font-weight: 500; background: ${riskColor}">
+                    ${props.flood_risk_category || 'Unknown'}
                 </div>
-            `;
-        }
+            </div>
+            ${isHighRisk ? `
+            <div style="background: #fdedec; border-left: 4px solid #e74c3c; padding: 8px; margin-bottom: 10px; border-radius: 4px;">
+                <div style="color: #c0392b; font-weight: 600; font-size: 12px;">⚠️ High Flood Risk</div>
+                <div style="color: #e74c3c; font-size: 11px;">Monitor this station closely</div>
+            </div>
+            ` : ''}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <div>
+                    <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River</div>
+                    <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_name || 'N/A'}</div>
+                </div>
+                <div>
+                    <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">River KM</div>
+                    <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.river_km || 'N/A'}</div>
+                </div>
+                <div>
+                    <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Discharge</div>
+                    <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.avg_discharge ? props.avg_discharge.toFixed(1) + ' m³/s' : 'N/A'}</div>
+                </div>
+                <div>
+                    <div style="color: #7f8c8d; font-weight: 500; font-size: 12px;">Agency</div>
+                    <div style="color: #2c3e50; font-weight: 600; font-size: 12px;">${props.agency || 'N/A'}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
         function updateSidebarWithData(stations) {
             // Update risk counts

@@ -188,7 +188,7 @@ def create_water_stations_from_json(json_file, output_geojson):
 
 
 if __name__ == "__main__":
-    base_path = "C:/Users/SH/Downloads/map_hackathon/"
+    base_path = "C:/Users/gosia/Downloads/EasyMap2/EasyMap"
 
     print("🚀 Starting flood risk analysis...")
 
