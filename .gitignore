@@ -1,0 +1,32 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.log
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+
+# Data and results
+*.grib
+*.geojson
+*.json
+*.csv
+*.nc
+
+# Jupyter / checkpoints
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
+
+# OS-specific
+.DS_Store
+Thumbs.db
