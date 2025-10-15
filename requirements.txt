@@ -1,0 +1,7 @@
+xarray
+geopandas
+shapely
+numpy
+cfgrib
+rioxarray
+cdsapi
